@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Client</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2rem; }
+        label { display:block; margin-top:.6rem; }
+        input { width: 360px; padding:.4rem; }
+        button { margin-top:1rem; padding:.5rem 1rem; }
+        a { margin-left: .6rem; }
+    </style>
+</head>
+<body>
+<h1 th:text="${client.id} != null ? 'Modifier Client' : 'Nouveau Client'"></h1>
+
+<form th:action="${client.id} != null ? '/clients/' + ${client.id} : '/clients'" method="post" th:object="${client}">
+    <label>Nom <input th:field="*{nom}" required/></label>
+    <label>Prénom <input th:field="*{prenom}"/></label>
+    <label>Email <input th:field="*{email}"/></label>
+    <label>Téléphone <input th:field="*{telephone}"/></label>
+    <label>Adresse <input th:field="*{adresse}"/></label>
+    <label>Ville <input th:field="*{ville}"/></label>
+    <button type="submit">Enregistrer</button>
+    <a href="/clients">Annuler</a>
+ </form>
+
+</body>
+</html>
+
+

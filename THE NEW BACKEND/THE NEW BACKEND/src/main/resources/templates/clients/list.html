@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Clients</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2rem; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background: #f2f2f2; }
+        a.button, button { padding: .4rem .8rem; margin-right: .3rem; }
+    </style>
+    <link rel="icon" href="data:,"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="color-scheme" content="light dark"/>
+    <meta name="supported-color-schemes" content="light dark"/>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data:;"/>
+    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin"/>
+    <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp"/>
+    <meta http-equiv="Cross-Origin-Resource-Policy" content="same-origin"/>
+    <meta http-equiv="Referrer-Policy" content="no-referrer"/>
+</head>
+<body>
+<h1>Liste des clients</h1>
+
+<p>
+    <a class="button" th:href="@{/clients/new}">Nouveau client</a>
+    <a class="button" th:href="@{/api/clients}">API JSON</a>
+ </p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Id</th>
+        <th>Nom</th>
+        <th>Prénom</th>
+        <th>Email</th>
+        <th>Ville</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="c : ${clients}">
+        <td th:text="${c.id}"></td>
+        <td th:text="${c.nom}"></td>
+        <td th:text="${c.prenom}"></td>
+        <td th:text="${c.email}"></td>
+        <td th:text="${c.ville}"></td>
+        <td>
+            <a th:href="@{'/clients/' + ${c.id} + '/edit'}">Modifier</a>
+            <form th:action="@{'/clients/' + ${c.id} + '/delete'}" method="post" style="display:inline">
+                <button type="submit">Supprimer</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+ </table>
+
+</body>
+</html>
+
+
