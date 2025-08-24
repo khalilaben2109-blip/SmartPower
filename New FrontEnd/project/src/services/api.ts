@@ -85,13 +85,31 @@ export const authService = {
       // Le backend retourne directement les données, pas dans un objet data
       const responseData = response.data;
       
+      // Fonction pour convertir les rôles du backend vers le frontend
+      const convertRole = (backendRole: string): string => {
+        switch (backendRole) {
+          case 'ROLE_ADMIN':
+            return 'admin';
+          case 'ROLE_CLIENT':
+            return 'client';
+          case 'ROLE_SUPERVISOR':
+            return 'supervisor';
+          case 'ROLE_TECHNICIEN':
+            return 'technical';
+          case 'ROLE_RH':
+            return 'hr';
+          default:
+            return 'client'; // Par défaut
+        }
+      };
+
       // Adapter la structure pour correspondre à notre interface
       const adaptedData: LoginResponse = {
         token: responseData.token,
         user: {
           id: responseData.userId?.toString() || '1',
           email: responseData.email,
-          role: responseData.role,
+          role: convertRole(responseData.role),
           name: `${responseData.nom} ${responseData.prenom}`.trim()
         }
       };

@@ -61,6 +61,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: apiUser.role as User['role'],
         };
         
+        console.log('User role after conversion:', user.role); // Debug
+        console.log('Full user object:', user); // Debug
+        
         setUser(user);
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('token', token);
@@ -90,6 +93,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    
+    // Rediriger vers la page de login et nettoyer l'URL
+    window.location.href = '/';
   };
 
   return (

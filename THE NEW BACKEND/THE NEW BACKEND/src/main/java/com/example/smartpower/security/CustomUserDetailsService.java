@@ -16,6 +16,9 @@ import java.util.Collections;
 public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
+    private UtilisateurRepository utilisateurRepository;
+
+    @Autowired
     private AdminRepository adminRepository;
 
     @Autowired
@@ -29,34 +32,41 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        // Chercher dans Admin
-        Admin admin = adminRepository.findByEmail(email).orElse(null);
-        if (admin != null) {
-            return new User(admin.getEmail(), admin.getMotDePasse(), 
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")));
-        }
-
-        // Chercher dans Client
-        Client client = clientRepository.findByEmail(email).orElse(null);
-        if (client != null) {
-            return new User(client.getEmail(), client.getMotDePasse(), 
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_CLIENT")));
-        }
-
-        // Chercher dans RH
-        RH rh = rhRepository.findByEmail(email).orElse(null);
-        if (rh != null) {
-            return new User(rh.getEmail(), rh.getMotDePasse(), 
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_RH")));
-        }
-
-        // Chercher dans Technicien
-        Technicien technicien = technicienRepository.findByEmail(email).orElse(null);
-        if (technicien != null) {
-            return new User(technicien.getEmail(), technicien.getMotDePasse(), 
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_TECHNICIEN")));
+        System.out.println("DEBUG: Recherche de l'utilisateur avec l'email: " + email);
+        
+        // Chercher dans la table utilisateurs
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(email).orElse(null);
+        if (utilisateur != null) {
+            System.out.println("DEBUG: Utilisateur trouvé dans utilisateurs - ID: " + utilisateur.getId());
+            String role = determineRole(utilisateur.getId());
+            System.out.println("DEBUG: Rôle déterminé: " + role);
+            return new User(utilisateur.getEmail(), utilisateur.getMotDePasse(), 
+                Collections.singletonList(new SimpleGrantedAuthority(role)));
+        } else {
+            System.out.println("DEBUG: Utilisateur NON trouvé dans utilisateurs");
         }
 
         throw new UsernameNotFoundException("Utilisateur non trouvé avec l'email: " + email);
+    }
+
+    private String determineRole(Long userId) {
+        System.out.println("DEBUG: Détermination du rôle pour l'ID: " + userId);
+        
+        if (adminRepository.findById(userId).isPresent()) {
+            System.out.println("DEBUG: Utilisateur trouvé dans admins");
+            return "ROLE_ADMIN";
+        } else if (clientRepository.findById(userId).isPresent()) {
+            System.out.println("DEBUG: Utilisateur trouvé dans clients");
+            return "ROLE_CLIENT";
+        } else if (rhRepository.findById(userId).isPresent()) {
+            System.out.println("DEBUG: Utilisateur trouvé dans rhs");
+            return "ROLE_RH";
+        } else if (technicienRepository.findById(userId).isPresent()) {
+            System.out.println("DEBUG: Utilisateur trouvé dans techniciens");
+            return "ROLE_TECHNICIEN";
+        } else {
+            System.out.println("DEBUG: Utilisateur NON trouvé dans aucune table de rôle");
+            return "ROLE_USER";
+        }
     }
 }

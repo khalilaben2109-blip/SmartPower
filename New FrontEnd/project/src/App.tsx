@@ -15,6 +15,7 @@ import ClaimsPage from './pages/ClaimsPage';
 import ChatbotPage from './pages/ChatbotPage';
 import UsersPage from './pages/UsersPage';
 import MetersPage from './pages/MetersPage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function AppRoutes() {
   const { user } = useAuth();
@@ -23,38 +24,120 @@ function AppRoutes() {
     return <LoginPage />;
   }
 
+  // Debug: afficher le rôle de l'utilisateur
+  console.log('User role in AppRoutes:', user.role);
+  console.log('User object:', user);
+
   const getDashboardRoute = () => {
+    console.log('Getting dashboard route for role:', user.role);
+    
     switch (user.role) {
       case 'admin':
+        console.log('Routing to /admin');
         return '/admin';
       case 'client':
+        console.log('Routing to /client');
         return '/client';
       case 'supervisor':
+        console.log('Routing to /supervisor');
         return '/supervisor';
       case 'technical':
+        console.log('Routing to /technical');
         return '/technical';
       case 'hr':
+        console.log('Routing to /hr');
         return '/hr';
       default:
+        console.log('Default routing to /client');
         return '/client';
     }
   };
+
+  // Vérifier si l'utilisateur est sur la bonne route
+  const currentPath = window.location.pathname;
+  const expectedPath = getDashboardRoute();
+  
+  console.log('Current path:', currentPath);
+  console.log('Expected path:', expectedPath);
+  
+  // Si l'utilisateur n'est pas sur la bonne route, le rediriger
+  if (currentPath !== expectedPath && currentPath !== '/') {
+    console.log('Redirecting user to correct route');
+    return <Navigate to={expectedPath} replace />;
+  }
 
   return (
     <DashboardLayout>
       <Routes>
         <Route path="/" element={<Navigate to={getDashboardRoute()} />} />
-        <Route path="/client" element={<ClientDashboard />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/supervisor" element={<SupervisorDashboard />} />
-        <Route path="/technical" element={<TechnicalDashboard />} />
-        <Route path="/hr" element={<HRDashboard />} />
-        <Route path="/bills" element={<BillsPage />} />
-        <Route path="/consumption" element={<ConsumptionPage />} />
-        <Route path="/claims" element={<ClaimsPage />} />
-        <Route path="/chatbot" element={<ChatbotPage />} />
-        <Route path="/users" element={<UsersPage />} />
-        <Route path="/meters" element={<MetersPage />} />
+        
+        {/* Routes protégées par rôle */}
+        <Route path="/client" element={
+          <ProtectedRoute allowedRoles={['client']} fallbackPath="/">
+            <ClientDashboard />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/admin" element={
+          <ProtectedRoute allowedRoles={['admin']} fallbackPath="/">
+            <AdminDashboard />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/supervisor" element={
+          <ProtectedRoute allowedRoles={['supervisor']} fallbackPath="/">
+            <SupervisorDashboard />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/technical" element={
+          <ProtectedRoute allowedRoles={['technical']} fallbackPath="/">
+            <TechnicalDashboard />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/hr" element={
+          <ProtectedRoute allowedRoles={['hr']} fallbackPath="/">
+            <HRDashboard />
+          </ProtectedRoute>
+        } />
+        
+        {/* Routes partagées selon les rôles */}
+        <Route path="/bills" element={
+          <ProtectedRoute allowedRoles={['admin', 'client', 'hr']} fallbackPath="/">
+            <BillsPage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/consumption" element={
+          <ProtectedRoute allowedRoles={['admin', 'client', 'technical']} fallbackPath="/">
+            <ConsumptionPage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/claims" element={
+          <ProtectedRoute allowedRoles={['admin', 'client', 'hr', 'technical']} fallbackPath="/">
+            <ClaimsPage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/chatbot" element={
+          <ProtectedRoute allowedRoles={['admin', 'client', 'hr', 'technical', 'supervisor']} fallbackPath="/">
+            <ChatbotPage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/users" element={
+          <ProtectedRoute allowedRoles={['admin']} fallbackPath="/">
+            <UsersPage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/meters" element={
+          <ProtectedRoute allowedRoles={['admin', 'technical']} fallbackPath="/">
+            <MetersPage />
+          </ProtectedRoute>
+        } />
       </Routes>
     </DashboardLayout>
   );

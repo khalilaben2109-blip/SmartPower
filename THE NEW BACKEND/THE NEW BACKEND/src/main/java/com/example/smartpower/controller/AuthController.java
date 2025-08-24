@@ -24,6 +24,9 @@ public class AuthController {
     private AuthenticationManager authenticationManager;
 
     @Autowired
+    private UtilisateurRepository utilisateurRepository;
+
+    @Autowired
     private AdminRepository adminRepository;
 
     @Autowired
@@ -44,27 +47,37 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
         try {
+            System.out.println("DEBUG: Tentative de connexion pour: " + loginRequest.getEmail());
+            
             // Validation des champs
             if (loginRequest.getEmail() == null || loginRequest.getEmail().trim().isEmpty()) {
+                System.out.println("DEBUG: Email vide");
                 return ResponseEntity.badRequest().body("L'email est requis");
             }
             if (loginRequest.getPassword() == null || loginRequest.getPassword().trim().isEmpty()) {
+                System.out.println("DEBUG: Mot de passe vide");
                 return ResponseEntity.badRequest().body("Le mot de passe est requis");
             }
 
+            System.out.println("DEBUG: Tentative d'authentification...");
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
             );
 
+            System.out.println("DEBUG: Authentification réussie");
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = tokenProvider.generateToken(authentication);
 
             // Trouver l'utilisateur et ses informations
+            System.out.println("DEBUG: Recherche des informations utilisateur...");
             LoginResponse userInfo = findUserInfo(loginRequest.getEmail());
             userInfo.setToken(jwt);
 
+            System.out.println("DEBUG: Connexion réussie pour: " + loginRequest.getEmail());
             return ResponseEntity.ok(userInfo);
         } catch (Exception e) {
+            System.out.println("DEBUG: Erreur lors de la connexion: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().body("Email ou mot de passe incorrect");
         }
     }
@@ -90,10 +103,7 @@ public class AuthController {
             }
 
             // Vérifier si l'email existe déjà
-            if (adminRepository.findByEmail(registerRequest.getEmail()).isPresent() ||
-                clientRepository.findByEmail(registerRequest.getEmail()).isPresent() ||
-                rhRepository.findByEmail(registerRequest.getEmail()).isPresent() ||
-                technicienRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
+            if (utilisateurRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
                 return ResponseEntity.badRequest().body("Email déjà utilisé");
             }
 
@@ -174,40 +184,25 @@ public class AuthController {
         String nom = "";
         String prenom = "";
 
-        // Chercher dans Admin
-        Admin admin = adminRepository.findByEmail(email).orElse(null);
-        if (admin != null) {
-            role = "ROLE_ADMIN";
-            userId = admin.getId();
-            nom = admin.getNom();
-            prenom = admin.getPrenom();
-        }
-
-        // Chercher dans Client
-        Client client = clientRepository.findByEmail(email).orElse(null);
-        if (client != null) {
-            role = "ROLE_CLIENT";
-            userId = client.getId();
-            nom = client.getNom();
-            prenom = client.getPrenom();
-        }
-
-        // Chercher dans RH
-        RH rh = rhRepository.findByEmail(email).orElse(null);
-        if (rh != null) {
-            role = "ROLE_RH";
-            userId = rh.getId();
-            nom = rh.getNom();
-            prenom = rh.getPrenom();
-        }
-
-        // Chercher dans Technicien
-        Technicien technicien = technicienRepository.findByEmail(email).orElse(null);
-        if (technicien != null) {
-            role = "ROLE_TECHNICIEN";
-            userId = technicien.getId();
-            nom = technicien.getNom();
-            prenom = technicien.getPrenom();
+        // Chercher dans la table utilisateurs
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(email).orElse(null);
+        if (utilisateur != null) {
+            userId = utilisateur.getId();
+            nom = utilisateur.getNom();
+            prenom = utilisateur.getPrenom();
+            
+            // Déterminer le rôle en vérifiant les tables de rôles
+            if (adminRepository.findById(utilisateur.getId()).isPresent()) {
+                role = "ROLE_ADMIN";
+            } else if (clientRepository.findById(utilisateur.getId()).isPresent()) {
+                role = "ROLE_CLIENT";
+            } else if (rhRepository.findById(utilisateur.getId()).isPresent()) {
+                role = "ROLE_RH";
+            } else if (technicienRepository.findById(utilisateur.getId()).isPresent()) {
+                role = "ROLE_TECHNICIEN";
+            } else {
+                role = "ROLE_USER";
+            }
         }
 
         return new LoginResponse("", "Bearer", email, role, userId, nom, prenom);

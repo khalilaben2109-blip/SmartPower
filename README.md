@@ -77,6 +77,21 @@ WHERE email = 'admin@gmail.com';
 - **Mot de passe** : `admin`
 - **Rôle** : `ROLE_ADMIN`
 
+### Client
+- **Email** : `client@example.com`
+- **Mot de passe** : `password`
+- **Rôle** : `ROLE_CLIENT`
+
+### Technicien
+- **Email** : `technicien@example.com`
+- **Mot de passe** : `password`
+- **Rôle** : `ROLE_TECHNICIEN`
+
+### RH (Ressources Humaines)
+- **Email** : `rh@example.com`
+- **Mot de passe** : `password`
+- **Rôle** : `ROLE_RH`
+
 ## 📱 Accès à l'Application
 
 - **Frontend** : http://localhost:5173

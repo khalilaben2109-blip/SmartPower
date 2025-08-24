@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Zap, Moon, Sun, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -15,18 +15,31 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     
-    const success = await login(email, password);
+    // Nettoyer l'email des espaces
+    const cleanEmail = email.trim();
+    
+    // Validation basique de l'email
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setError('Veuillez entrer une adresse email valide');
+      return;
+    }
+    
+    const success = await login(cleanEmail, password);
     if (!success) {
       setError(authError || 'Identifiants incorrects');
     }
   };
 
-  const demoUsers = [
-    { email: 'admin@example.com', role: 'Admin' },
-    { email: 'client@example.com', role: 'Client' },
-    { email: 'supervisor@example.com', role: 'Superviseur' },
-    { email: 'technical@example.com', role: 'Service Technique' },
-    { email: 'hr@example.com', role: 'RH' }
+          const demoUsers = [
+    { email: 'admin@gmail.com', role: 'Admin Principal', password: 'password' },
+    { email: 'superadmin-new@gmail.com', role: 'Super Admin', password: 'admin' },
+    { email: 'client1@gmail.com', role: 'Client 1', password: 'password' },
+    { email: 'client2@gmail.com', role: 'Client 2', password: 'password' },
+    { email: 'technicien1@gmail.com', role: 'Technicien 1', password: 'password' },
+    { email: 'technicien2@gmail.com', role: 'Technicien 2', password: 'password' },
+    { email: 'rh1@gmail.com', role: 'RH 1', password: 'password' },
+    { email: 'rh2@gmail.com', role: 'RH 2', password: 'password' },
+    { email: 'superviseur@gmail.com', role: 'Superviseur', password: 'password' }
   ];
 
   return (
@@ -55,7 +68,7 @@ export default function LoginPage() {
             Smart Meter
           </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Gestion intelligente des compteurs électriques
+            Gestion intelligente des compteurs Ã©lectriques
           </p>
         </div>
 
@@ -119,15 +132,15 @@ export default function LoginPage() {
 
           <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 text-center">
-              Comptes de démonstration :
+              Comptes de dÃ©monstration :
             </p>
             <div className="grid grid-cols-1 gap-2">
               {demoUsers.map((user) => (
                 <button
                   key={user.email}
                   onClick={() => {
-                    setEmail(user.email);
-                    setPassword('password');
+                    setEmail(user.email.trim());
+                    setPassword(user.password || 'password');
                   }}
                   className="text-left p-2 text-xs bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded border border-gray-200 dark:border-gray-600 transition-colors"
                 >
@@ -137,7 +150,7 @@ export default function LoginPage() {
               ))}
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-              Mot de passe : <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">password</code>
+              Mot de passe : <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">password</code> (sauf admin@gmail.com : <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">admin</code>)
             </p>
           </div>
         </div>
@@ -145,3 +158,6 @@ export default function LoginPage() {
     </div>
   );
 }
+
+
+
