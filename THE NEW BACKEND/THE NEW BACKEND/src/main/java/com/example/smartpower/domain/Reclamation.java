@@ -25,6 +25,16 @@ public class Reclamation {
 
     @ManyToOne
     private Technicien technicienTraiteur;
+    
+    // Nouveaux champs pour les réclamations des techniciens
+    @ManyToOne
+    private Technicien technicienExpediteur;
+    
+    @ManyToOne
+    private Utilisateur destinataire; // Peut être RH ou Admin
+    
+    private String titre;
+    private String categorie; // "TECHNIQUE", "MATERIEL", "FORMATION", "AUTRE"
 }
 
 

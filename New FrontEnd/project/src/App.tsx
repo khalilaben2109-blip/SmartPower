@@ -15,6 +15,8 @@ import ClaimsPage from './pages/ClaimsPage';
 import ChatbotPage from './pages/ChatbotPage';
 import UsersPage from './pages/UsersPage';
 import MetersPage from './pages/MetersPage';
+import TechnicienCompteursPage from './pages/TechnicienCompteursPage';
+import TechnicienReclamationsPage from './pages/TechnicienReclamationsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function AppRoutes() {
@@ -61,7 +63,14 @@ function AppRoutes() {
   console.log('Expected path:', expectedPath);
   
   // Si l'utilisateur n'est pas sur la bonne route, le rediriger
-  if (currentPath !== expectedPath && currentPath !== '/') {
+  // Mais permettre l'accès aux sous-routes (comme /technical/compteurs)
+  const isOnSubRoute = currentPath.startsWith('/technical/') || 
+                      currentPath.startsWith('/admin/') || 
+                      currentPath.startsWith('/client/') ||
+                      currentPath.startsWith('/supervisor/') ||
+                      currentPath.startsWith('/hr/');
+  
+  if (currentPath !== expectedPath && currentPath !== '/' && !isOnSubRoute) {
     console.log('Redirecting user to correct route');
     return <Navigate to={expectedPath} replace />;
   }
@@ -136,6 +145,17 @@ function AppRoutes() {
         <Route path="/meters" element={
           <ProtectedRoute allowedRoles={['admin', 'technical']} fallbackPath="/">
             <MetersPage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/technical/compteurs" element={
+          <ProtectedRoute allowedRoles={['technical']} fallbackPath="/">
+            <TechnicienCompteursPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/technical/reclamations" element={
+          <ProtectedRoute allowedRoles={['technical']} fallbackPath="/">
+            <TechnicienReclamationsPage />
           </ProtectedRoute>
         } />
       </Routes>

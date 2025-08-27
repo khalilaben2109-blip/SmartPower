@@ -1,52 +1,93 @@
-import React, { useState } from 'react';
-import { Plus, Search, Zap, Wifi, WifiOff, Settings } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, Zap, Wifi, WifiOff, Settings, RefreshCw, AlertCircle, User } from 'lucide-react';
+import { technicienService, Compteur, Client, CreateCompteurRequest, CreateClientRequest } from '../services/technicienService';
+import CompteurModal from '../components/CompteurModal';
+import ClientModal from '../components/ClientModal';
 
 export default function MetersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  
-  const meters = [
-    {
-      id: 'MTR001',
-      client: 'Jean Dupont',
-      address: '15 Rue de la Paix, 75001 Paris',
-      status: 'connected',
-      lastReading: '245 kWh',
-      lastUpdate: '2024-11-15 14:30',
-      batteryLevel: 85,
-      signal: 95
-    },
-    {
-      id: 'MTR002',
-      client: 'Sophie Bernard',
-      address: '42 Avenue des Roses, 75002 Paris',
-      status: 'connected',
-      lastReading: '189 kWh',
-      lastUpdate: '2024-11-15 14:25',
-      batteryLevel: 72,
-      signal: 88
-    },
-    {
-      id: 'MTR003',
-      client: 'Non assigné',
-      address: '8 Boulevard Victor Hugo, 75003 Paris',
-      status: 'disconnected',
-      lastReading: '0 kWh',
-      lastUpdate: '2024-11-13 09:15',
-      batteryLevel: 45,
-      signal: 0
-    },
-    {
-      id: 'MTR004',
-      client: 'Paul Durand',
-      address: '23 Rue de Rivoli, 75001 Paris',
-      status: 'maintenance',
-      lastReading: '167 kWh',
-      lastUpdate: '2024-11-14 16:45',
-      batteryLevel: 91,
-      signal: 92
+  const [compteurs, setCompteurs] = useState<Compteur[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [selectedCompteur, setSelectedCompteur] = useState<Compteur | null>(null);
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [clientModalOpen, setClientModalOpen] = useState(false);
+  const [clientModalMode, setClientModalMode] = useState<'create' | 'edit'>('create');
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
+  // Charger les données
+  const loadData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [compteursData, clientsData] = await Promise.all([
+        technicienService.getAllCompteurs(),
+        technicienService.getAllClients()
+      ]);
+      setCompteurs(compteursData);
+      setClients(clientsData);
+    } catch (err) {
+      console.error('Erreur loadData:', err);
+      setError('Erreur lors du chargement des données');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // Créer un compteur
+  const handleCreateCompteur = async (compteurData: CreateCompteurRequest) => {
+    try {
+      await technicienService.createCompteur(compteurData);
+      await loadData(); // Recharger la liste
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  // Créer un client
+  const handleCreateClient = async (clientData: CreateClientRequest) => {
+    try {
+      await technicienService.createClient(clientData);
+      await loadData(); // Recharger la liste
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  // Ouvrir le modal de création de compteur
+  const openCreateModal = () => {
+    setModalMode('create');
+    setSelectedCompteur(null);
+    setModalOpen(true);
+  };
+
+  // Ouvrir le modal de création de client
+  const openCreateClientModal = () => {
+    setClientModalMode('create');
+    setSelectedClient(null);
+    setClientModalOpen(true);
+  };
+
+  // Convertir les compteurs en format compatible avec l'interface existante
+  const meters = compteurs.map(compteur => ({
+    id: compteur.numeroSerie,
+    client: compteur.client ? `${compteur.client.nom} ${compteur.client.prenom}` : 'Non assigné',
+    address: compteur.client ? `${compteur.client.adresse}, ${compteur.client.codePostal} ${compteur.client.ville}` : 'Adresse non disponible',
+    status: compteur.statutCompteur.toLowerCase() === 'actif' ? 'connected' : 
+            compteur.statutCompteur.toLowerCase() === 'inactif' ? 'disconnected' : 'maintenance',
+    lastReading: `${compteur.consommationMensuelle} kWh`,
+    lastUpdate: compteur.dateInstallation,
+    batteryLevel: 85, // Valeur par défaut
+    signal: 95 // Valeur par défaut
+  }));
 
   const getStatusInfo = (status: string) => {
     const statusMap = {
@@ -99,10 +140,32 @@ export default function MetersPage() {
           </p>
         </div>
         
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2">
-          <Plus className="h-4 w-4" />
-          <span>Nouveau Compteur</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={loadData}
+            disabled={loading}
+            className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+            title="Actualiser"
+          >
+            <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+          
+          <button 
+            onClick={openCreateClientModal}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
+          >
+            <User className="h-4 w-4" />
+            <span>Nouveau Client</span>
+          </button>
+          
+          <button 
+            onClick={openCreateModal}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Nouveau Compteur</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -113,7 +176,9 @@ export default function MetersPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Connectés</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{connectedCount}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {loading ? <RefreshCw className="h-6 w-6 animate-spin" /> : connectedCount}
+              </p>
             </div>
           </div>
         </div>
@@ -125,7 +190,9 @@ export default function MetersPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Déconnectés</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{disconnectedCount}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {loading ? <RefreshCw className="h-6 w-6 animate-spin" /> : disconnectedCount}
+              </p>
             </div>
           </div>
         </div>
@@ -137,7 +204,9 @@ export default function MetersPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">En maintenance</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{maintenanceCount}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {loading ? <RefreshCw className="h-6 w-6 animate-spin" /> : maintenanceCount}
+              </p>
             </div>
           </div>
         </div>
@@ -170,7 +239,19 @@ export default function MetersPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredMeters.map((meter) => {
+          {loading ? (
+            <div className="col-span-full flex items-center justify-center py-12">
+              <div className="flex items-center space-x-2">
+                <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
+                <span className="text-gray-600 dark:text-gray-400">Chargement des compteurs...</span>
+              </div>
+            </div>
+          ) : filteredMeters.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <p className="text-gray-600 dark:text-gray-400">Aucun compteur trouvé</p>
+            </div>
+          ) : (
+            filteredMeters.map((meter) => {
             const statusInfo = getStatusInfo(meter.status);
             const StatusIcon = statusInfo.icon;
             
@@ -246,9 +327,52 @@ export default function MetersPage() {
                 </div>
               </div>
             );
-          })}
+          })
+          )}
         </div>
       </div>
+
+      {/* Affichage de l'erreur */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <div className="flex items-center space-x-3">
+            <AlertCircle className="h-5 w-5 text-red-500" />
+            <div>
+              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                Erreur de chargement
+              </h3>
+              <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                {error}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={loadData}
+            className="mt-3 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors"
+          >
+            Réessayer
+          </button>
+        </div>
+      )}
+
+      {/* Modal pour créer/éditer un compteur */}
+      <CompteurModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSave={handleCreateCompteur}
+        compteur={selectedCompteur}
+        clients={clients}
+        mode={modalMode}
+      />
+
+      {/* Modal pour créer/éditer un client */}
+      <ClientModal
+        isOpen={clientModalOpen}
+        onClose={() => setClientModalOpen(false)}
+        onSave={handleCreateClient}
+        client={selectedClient}
+        mode={clientModalMode}
+      />
     </div>
   );
 }

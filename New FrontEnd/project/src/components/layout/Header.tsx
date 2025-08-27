@@ -22,13 +22,15 @@ export default function Header() {
 
           <button
             onClick={toggleTheme}
-            className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors relative"
+            title={`Passer au mode ${theme === 'light' ? 'sombre' : 'clair'}`}
           >
             {theme === 'light' ? (
               <Moon className="h-6 w-6" />
             ) : (
               <Sun className="h-6 w-6" />
             )}
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full opacity-75"></span>
           </button>
 
           <div className="flex items-center space-x-3">

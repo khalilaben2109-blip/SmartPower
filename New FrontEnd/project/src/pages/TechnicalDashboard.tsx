@@ -127,6 +127,18 @@ export default function TechnicalDashboard() {
           <div className="mt-6">
             <h4 className="font-medium text-gray-900 dark:text-white mb-3">Actions Rapides</h4>
             <div className="space-y-2">
+                          <button 
+              onClick={() => window.location.href = '/technical/compteurs'}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-lg transition-colors"
+            >
+              Gérer les Compteurs
+            </button>
+            <button 
+              onClick={() => window.location.href = '/technical/reclamations'}
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white p-3 rounded-lg transition-colors"
+            >
+              Mes Réclamations
+            </button>
               <button className="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg transition-colors">
                 Signaler un Problème
               </button>
